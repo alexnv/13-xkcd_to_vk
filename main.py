@@ -8,7 +8,6 @@ import sys
 import requests
 from dotenv import load_dotenv
 
-VK_APPID = ""
 VK_ACCESS_TOKEN = ""
 VK_GROUPID = ""
 VK_APIVERSION = "5.131"
@@ -150,7 +149,6 @@ def init_args():
 def main():
     setup()
     args = init_args()
-    VK_APPID = os.getenv("VK_APPID", "")
     VK_ACCESS_TOKEN = os.getenv("VK_ACCESS_TOKEN", "")
     VK_GROUPID = os.getenv("VK_GROUPID", "")
 
