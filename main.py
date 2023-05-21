@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 VK_ACCESS_TOKEN = ""
 VK_GROUPID = ""
 VK_APIVERSION = "5.131"
+MAX_COMIX = 999
 
 from common_functions import get_imagefolder, save_image_to_file_from_url, get_file_extension_from_url, \
     get_imagefolder_filename
@@ -146,7 +147,7 @@ def setup():
 
 
 def init_args():
-    random_comix_id = random.randrange(1, 300)
+    random_comix_id = random.randrange(1, MAX_COMIX)
     parser = argparse.ArgumentParser(description='Программа загружает фото XKCD и публикует на стену VK')
     parser.add_argument('id', help='Номер комикса, если не указан будет сохранен случайный комикс', nargs='?',
                         default=random_comix_id)
