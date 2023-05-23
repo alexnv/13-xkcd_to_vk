@@ -37,7 +37,7 @@ def fetch_xkcd_comix(comixid=0):
         logging.info(f"Скачиваем файл по адресу: {xkcd_comix_info['img']} в {file_name}")
         save_image_to_file_from_url(xkcd_comix_info['img'], file_name)
         comix_comment = xkcd_comix_info['alt']
-        return (file_name, comix_comment)
+        return file_name, comix_comment
     return None
 
 
