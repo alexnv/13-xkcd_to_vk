@@ -163,10 +163,10 @@ def main():
 
     if not VK_ACCESS_TOKEN:
         logging.error("Не задано значение переменной окружения VK_ACCESS_TOKEN")
-        exit()
+        sys.exit()
     if not VK_GROUPID:
         logging.error("Не задано значение переменной окружения VK_GROUPID")
-        exit()
+        sys.exit()
     comix_id = int(args.id)
     try:
         logging.info(f"Скачиваем комикс с номером {comix_id}")
