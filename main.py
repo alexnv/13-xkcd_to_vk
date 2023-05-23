@@ -168,15 +168,18 @@ def main():
         logging.error("Не задано значение переменной окружения VK_GROUPID")
         exit()
     comix_id = int(args.id)
-    logging.info(f"Скачиваем комикс с номером {comix_id}")
-    comix_filename, comix_comment = fetch_xkcd_comix(comix_id)
-    if comix_filename:
-        uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=VK_ACCESS_TOKEN,
-                                      vk_groupid=VK_GROUPID)
-        if uploaded:
-            logging.info(f"Комикс успешно опубликован! Удаляем файл комикса {comix_filename}")
+    try:
+        logging.info(f"Скачиваем комикс с номером {comix_id}")
+        comix_filename, comix_comment = fetch_xkcd_comix(comix_id)
+        if comix_filename:
+            uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=VK_ACCESS_TOKEN,
+                                          vk_groupid=VK_GROUPID)
+            if uploaded:
+                logging.info(f"Комикс успешно опубликован! Удаляем файл комикса {comix_filename}")
+                pathlib.Path.unlink(comix_filename)
+    finally:
+        if pathlib.Path.exists(comix_filename):
             pathlib.Path.unlink(comix_filename)
-
 
 if __name__ == '__main__':
     main()
