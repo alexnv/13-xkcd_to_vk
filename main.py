@@ -41,7 +41,7 @@ def fetch_xkcd_comix(comixid=0):
     return None
 
 
-def vk_getuploadurl(vk_groupid="", vk_accesstoken=""):
+def get_image_upload_url(vk_groupid="", vk_accesstoken=""):
     url = f"https://api.vk.com/method/photos.getWallUploadServer"
     payload = {
         "access_token": vk_accesstoken,
@@ -61,7 +61,7 @@ def vk_getuploadurl(vk_groupid="", vk_accesstoken=""):
         return None
 
 
-def vk_upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
+def upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
     logging.info(f"Загружаем файл {filename} по адресу {url}")
     with open(filename, 'rb') as file:
         files = {
@@ -79,7 +79,7 @@ def vk_upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
             return None
 
 
-def vk_save_photo_to_wall(photoObject, vk_groupid="", vk_accesstoken=""):
+def save_photo_to_wall(photoObject, vk_groupid="", vk_accesstoken=""):
     url = f"https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": vk_accesstoken,
@@ -102,7 +102,7 @@ def vk_save_photo_to_wall(photoObject, vk_groupid="", vk_accesstoken=""):
         return None
 
 
-def vk_publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken):
+def publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken):
     url = f"https://api.vk.com/method/wall.post"
     attachments = ""
     for vk_photo in vk_saved_photo:
@@ -130,13 +130,13 @@ def vk_publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken):
 
 
 def upload_photo_to_vk(filename, photo_comment, vk_groupid="", vk_accesstoken=""):
-    upload_url = vk_getuploadurl(vk_groupid, vk_accesstoken)
+    upload_url = get_image_upload_url(vk_groupid, vk_accesstoken)
     if upload_url:
-        vk_photo = vk_upload_file(upload_url, filename, vk_groupid, vk_accesstoken)
+        vk_photo = upload_file(upload_url, filename, vk_groupid, vk_accesstoken)
         if vk_photo:
-            vk_saved_photo = vk_save_photo_to_wall(vk_photo, vk_groupid, vk_accesstoken)
+            vk_saved_photo = save_photo_to_wall(vk_photo, vk_groupid, vk_accesstoken)
             if vk_saved_photo:
-                vk_post = vk_publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken)
+                vk_post = publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken)
                 return True
 
 
