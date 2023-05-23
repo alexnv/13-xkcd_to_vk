@@ -77,15 +77,15 @@ def upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
             return None
 
 
-def save_photo_to_wall(photoObject, vk_groupid="", vk_accesstoken=""):
+def save_photo_to_wall(photo_оbject, vk_groupid="", vk_accesstoken=""):
     url = f"https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": vk_accesstoken,
         "v": VK_APIVERSION,
         "group_id": vk_groupid,
-        "photo": photoObject['photo'],
-        "server": photoObject['server'],
-        "hash": photoObject['hash']
+        "photo": photo_оbject['photo'],
+        "server": photo_оbject['server'],
+        "hash": photo_оbject['hash']
     }
 
     logging.info(f"Сохранение фотографии в группу {vk_groupid}")
