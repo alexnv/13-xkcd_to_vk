@@ -66,15 +66,15 @@ def upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
             'photo': file,
         }
         response = requests.post(url, files=files)
-        response.raise_for_status()
+    response.raise_for_status()
 
-        response_or_error = response.json()
-        if 'photo' in response_or_error:
-            return response_or_error
-        elif 'error' in response_or_error:
-            logging.error(
-                f"Ошибка загрузки изображения. Детали {response_or_error['error']['error_msg']}")
-            return None
+    response_or_error = response.json()
+    if 'photo' in response_or_error:
+        return response_or_error
+    elif 'error' in response_or_error:
+        logging.error(
+            f"Ошибка загрузки изображения. Детали {response_or_error['error']['error_msg']}")
+        return None
 
 
 def save_photo_to_wall(photo_оbject, vk_groupid="", vk_accesstoken=""):
