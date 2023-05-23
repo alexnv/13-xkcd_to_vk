@@ -150,7 +150,7 @@ def init_args():
     random_comix_id = random.randrange(1, MAX_COMIX)
     parser = argparse.ArgumentParser(description='Программа загружает фото XKCD и публикует на стену VK')
     parser.add_argument('id', help='Номер комикса, если не указан будет сохранен случайный комикс', nargs='?',
-                        default=random_comix_id)
+                        default=random_comix_id, type=int)
 
     return parser.parse_args(sys.argv[1:])
 
@@ -167,7 +167,7 @@ def main():
     if not VK_GROUPID:
         logging.error("Не задано значение переменной окружения VK_GROUPID")
         sys.exit()
-    comix_id = int(args.id)
+    comix_id = args.id
     try:
         logging.info(f"Скачиваем комикс с номером {comix_id}")
         comix_filename, comix_comment = fetch_xkcd_comix(comix_id)
