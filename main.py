@@ -8,8 +8,6 @@ import sys
 import requests
 from dotenv import load_dotenv
 
-VK_ACCESS_TOKEN = ""
-VK_GROUPID = ""
 VK_APIVERSION = "5.131"
 MAX_COMIX = 999
 
@@ -158,13 +156,13 @@ def init_args():
 def main():
     setup()
     args = init_args()
-    VK_ACCESS_TOKEN = os.getenv("VK_ACCESS_TOKEN", "")
-    VK_GROUPID = os.getenv("VK_GROUPID", "")
+    vk_access_token = os.getenv("VK_ACCESS_TOKEN", "")
+    vk_groupid = os.getenv("VK_GROUPID", "")
 
-    if not VK_ACCESS_TOKEN:
+    if not vk_access_token:
         logging.error("Не задано значение переменной окружения VK_ACCESS_TOKEN")
         sys.exit()
-    if not VK_GROUPID:
+    if not vk_groupid:
         logging.error("Не задано значение переменной окружения VK_GROUPID")
         sys.exit()
     comix_id = args.id
@@ -172,8 +170,8 @@ def main():
         logging.info(f"Скачиваем комикс с номером {comix_id}")
         comix_filename, comix_comment = fetch_xkcd_comix(comix_id)
         if comix_filename:
-            uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=VK_ACCESS_TOKEN,
-                                          vk_groupid=VK_GROUPID)
+            uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=vk_access_token,
+                                          vk_groupid=vk_groupid)
             if uploaded:
                 logging.info(f"Комикс успешно опубликован! Удаляем файл комикса {comix_filename}")
                 pathlib.Path.unlink(comix_filename)
