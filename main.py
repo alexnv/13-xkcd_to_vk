@@ -11,8 +11,7 @@ from dotenv import load_dotenv
 VK_APIVERSION = "5.131"
 MAX_COMIX = 999
 
-from common_functions import get_imagefolder, save_image_to_file_from_url, get_file_extension_from_url, \
-    get_imagefolder_filename
+from common_functions import save_image_to_file_from_url, get_file_extension_from_url
 
 
 def fetch_xkcd_comix(comixid=0):
@@ -31,15 +30,21 @@ def fetch_xkcd_comix(comixid=0):
     if xkcd_comix_info['img']:
         index = xkcd_comix_info['num']
         image_extension = get_file_extension_from_url(xkcd_comix_info['img'])
-        file_name = get_imagefolder_filename(f'xkcd_{index}{image_extension}')
+        file_name = pathlib.Path.cwd() / 'images' / f'xkcd_{index}{image_extension}'
         logging.info(f"Скачиваем файл по адресу: {xkcd_comix_info['img']} в {file_name}")
         save_image_to_file_from_url(xkcd_comix_info['img'], file_name)
         comix_comment = xkcd_comix_info['alt']
         return file_name, comix_comment
     return None
 
+def parse_vk_response(response, result_key, operation):
+    if result_key in response:
+        return response[result_key]
+    elif 'error' in response:
+        logging.error(f"Ошибка {operation}. Детали {response['error']['error_msg']}")
+        return None
 
-def get_image_upload_url(vk_groupid="", vk_accesstoken=""):
+def get_image_upload_url(vk_groupid, vk_accesstoken):
     url = f"https://api.vk.com/method/photos.getWallUploadServer"
     payload = {
         "access_token": vk_accesstoken,
@@ -47,19 +52,19 @@ def get_image_upload_url(vk_groupid="", vk_accesstoken=""):
         "group_id": vk_groupid
     }
 
-    logging.info(f"Получаем адрес VK для загрузки изображения для группы {VK_GROUPID}")
+    logging.info(f"Получаем адрес VK для загрузки изображения для группы {vk_groupid}")
     response = requests.get(url, params=payload)
     response.raise_for_status()
 
     response_or_error = response.json()
-    if 'response' in response_or_error:
-        return response_or_error['response']['upload_url']
-    elif 'error' in response_or_error:
-        logging.error(f"Ошибка получения адреса загрузки изображения. Детали {response_or_error['error']['error_msg']}")
-        return None
+    result = parse_vk_response(response_or_error, 'response', 'Получение адреса загрузки изображения')
+    if result:
+        return result['upload_url']
+
+    return None
 
 
-def upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
+def upload_file(url, filename):
     logging.info(f"Загружаем файл {filename} по адресу {url}")
     with open(filename, 'rb') as file:
         files = {
@@ -69,47 +74,45 @@ def upload_file(url, filename, vk_groupid="", vk_accesstoken=""):
     response.raise_for_status()
 
     response_or_error = response.json()
-    if 'photo' in response_or_error:
-        return response_or_error
-    elif 'error' in response_or_error:
-        logging.error(
-            f"Ошибка загрузки изображения. Детали {response_or_error['error']['error_msg']}")
-        return None
+    result = parse_vk_response(response_or_error, 'photo', 'Загрузка изображения')
+    if result:
+        return result['photo'], result['server'], result['hash']
+
+    return None
 
 
-def save_photo_to_wall(photo_оbject, vk_groupid="", vk_accesstoken=""):
+
+def save_photo_to_wall(photo, server, hash, vk_groupid, vk_accesstoken):
     url = f"https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": vk_accesstoken,
         "v": VK_APIVERSION,
         "group_id": vk_groupid,
-        "photo": photo_оbject['photo'],
-        "server": photo_оbject['server'],
-        "hash": photo_оbject['hash']
+        "photo": photo,
+        "server": server,
+        "hash": hash
     }
 
     logging.info(f"Сохранение фотографии в группу {vk_groupid}")
     response = requests.get(url, params=payload)
     response.raise_for_status()
     response_or_error = response.json()
-    if 'response' in response_or_error:
-        return response_or_error['response']
-    elif 'error' in response_or_error:
-        logging.error(
-            f"Ошибка сохранения изображения. Детали {response_or_error['error']['error_msg']}")
-        return None
+    result = parse_vk_response(response_or_error, 'response', 'Сохранение изображения')
+    if result:
+        return result
+
+    return None
 
 
 def publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken):
     url = f"https://api.vk.com/method/wall.post"
     attachments = ""
-    for vk_photo in vk_saved_photo:
-        attachments += f"photo{vk_photo['owner_id']}_{vk_photo['id']}"
+    attachments += f"photo{vk_saved_photo['owner_id']}_{vk_saved_photo['id']}"
     payload = {
         "access_token": vk_accesstoken,
         "v": VK_APIVERSION,
         "group_id": vk_groupid,
-        "owner_id": "-" + vk_groupid,
+        "owner_id": f"-{vk_groupid}",
         "from_group": "1",
         "message": photo_comment,
         "attachments": attachments
@@ -118,29 +121,33 @@ def publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken):
     response = requests.get(url, params=payload)
     response.raise_for_status()
     response_or_error = response.json()
+    result = parse_vk_response(response_or_error, 'response', 'Сохранение изображения')
+    if result:
+        return result
 
-    if 'response' in response_or_error:
-        return response_or_error['response']
-    elif 'error' in response_or_error:
-        logging.error(
-            f"Ошибка сохранения изображения. Детали {response_or_error['error']['error_msg']}")
-        return None
+    return None
 
 
-def upload_photo_to_vk(filename, photo_comment, vk_groupid="", vk_accesstoken=""):
+def upload_photo_to_vk(filename, photo_comment, vk_groupid, vk_accesstoken):
     upload_url = get_image_upload_url(vk_groupid, vk_accesstoken)
-    if upload_url:
-        vk_photo = upload_file(upload_url, filename, vk_groupid, vk_accesstoken)
-        if vk_photo:
-            vk_saved_photo = save_photo_to_wall(vk_photo, vk_groupid, vk_accesstoken)
-            if vk_saved_photo:
-                vk_post = publish_photo(vk_saved_photo, photo_comment, vk_groupid, vk_accesstoken)
-                return True
+    if not upload_url:
+        return False
+    photo, server, photo_hash = upload_file(upload_url, filename, vk_groupid, vk_accesstoken)
+    if not photo:
+        return False
+    vk_saved_photo = save_photo_to_wall(photo, server, photo_hash, vk_groupid, vk_accesstoken)
+    if not vk_saved_photo:
+        return False
+    vk_post = publish_photo(vk_saved_photo[0], photo_comment, vk_groupid, vk_accesstoken)
+    if not vk_post:
+        return False
+    return True
 
 
 def setup():
     logging.getLogger().setLevel(logging.INFO)
-    get_imagefolder().mkdir(parents=True, exist_ok=True)
+    image_folder = pathlib.Path.cwd() / 'images'
+    image_folder.mkdir(parents=True, exist_ok=True)
     load_dotenv()
 
 
@@ -169,15 +176,17 @@ def main():
     try:
         logging.info(f"Скачиваем комикс с номером {comix_id}")
         comix_filename, comix_comment = fetch_xkcd_comix(comix_id)
-        if comix_filename:
-            uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=vk_access_token,
-                                          vk_groupid=vk_groupid)
-            if uploaded:
-                logging.info(f"Комикс успешно опубликован! Удаляем файл комикса {comix_filename}")
-                pathlib.Path.unlink(comix_filename)
+        if not comix_filename:
+            return
+        uploaded = upload_photo_to_vk(comix_filename, comix_comment, vk_accesstoken=vk_access_token,
+                                      vk_groupid=vk_groupid)
+        if uploaded:
+            logging.info(f"Комикс успешно опубликован! Удаляем файл комикса {comix_filename}")
+            pathlib.Path.unlink(comix_filename)
     finally:
         if pathlib.Path.exists(comix_filename):
             pathlib.Path.unlink(comix_filename)
+
 
 if __name__ == '__main__':
     main()
